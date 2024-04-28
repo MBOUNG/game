@@ -249,28 +249,28 @@ class CheckerModel:
 
 
 	def minimax_model_predict(self):
-		best_selected_piece_position,best_move_position = None, None
-		winner = self.check.winner()
+	    best_selected_piece_position, best_move_position = None, None
+	    winner = self.check.winner()
 
-		if winner:
-			return best_selected_piece_position, best_move_position
+	    if winner:
+	        return best_selected_piece_position, best_move_position
 
-		elif not self.check_game_progress():
-			return best_selected_piece_position , best_move_position
+	    elif not self.check_game_progress():
+	        return best_selected_piece_position , best_move_position
 
-		best_score = -float("inf")
+	    best_score = -float("inf")
 
-		for row in range(0, 3):
-        	for col in range(0, 3):
-            	
-                	score = self.minimax(False)
-                	if score > best_score:
-                    	best_score = score
-                    	best_selected_piece_position = (row, col)
+	    for row in range(0, 3):
+	        for col in range(0, 3):
+	            score = self.minimax(False)
+	            if score > best_score:
+	                best_score = score
+	                best_selected_piece_position = (row, col)
 
-                self.grid[row, col] = 0
+	            self.grid[row, col] = 0
 
-    return best_selected_piece_position, best_move_position
+	    return best_selected_piece_position, best_move_position
+
 		
 
 	def evaluate_grid(self, king_value =5):
@@ -286,3 +286,43 @@ class CheckerModel:
 					score+= current_piece.player*(king_value if current_piece.king else 1)
 
 		return score
+
+
+	def monte_carlo_model_predict(self, iterations=1000):
+        best_selected_piece_position, best_move_position = None, None
+        best_win_rate = -float("inf")
+
+
+        for selected_piece_position, possible_moves in self.dict_of_possible_moves.items():
+            total_wins = 0
+            total_simulations = 0
+
+            for _ in range(iterations):
+                simulation_checker = copy.deepcopy(self)
+                simulation_checker.move_piece(selected_piece_position, random.choice(possible_moves))
+                winner = simulation_checker.check_game_state()
+
+
+                while winner == "game_in_progress":
+                    selected_piece_position, possible_moves = random.choice(list(simulation_checker.dict_of_possible_moves.items()))
+                    simulation_checker.move_piece(selected_piece_position, random.choice(possible_moves))
+                    winner = simulation_checker.check_game_state()
+
+                if winner == 1:
+                    total_wins += 1
+                total_simulations += 1
+
+                win_rate = total_wins / total_simulations
+
+            if win_rate > best_win_rate:
+                best_win_rate = win_rate
+                best_selected_piece_position = selected_piece_position
+                best_move_position = random.choice(possible_moves)
+
+        return best_selected_piece_position, best_move_position
+
+
+
+
+
+	
